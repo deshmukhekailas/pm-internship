@@ -1,0 +1,20 @@
+{
+  "name": "pm-internship-recommendation-engine-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-Based Internship Recommendation Engine for PM Internship Scheme",
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "build:all": "npm run build:backend && npm run build:frontend",
+    "test": "npm --prefix backend run test",
+    "seed": "npm --prefix backend run prisma:seed",
+    "seed:clean": "npm --prefix backend run seed:clean",
+    "db:purge": "npm --prefix backend run db:purge:students",
+    "db:check": "npm --prefix backend run db:check",
+    "prisma:mongo:push": "npm --prefix backend run prisma:mongo:push",
+    "prisma:mongo:generate": "npm --prefix backend run prisma:mongo:generate"
+  }
+}

@@ -1,0 +1,426 @@
+// SQLite fallback schema for local development without external PostgreSQL service
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String
+  role         String        @default("STUDENT") // STUDENT, ADMIN
+  firstName    String
+  lastName     String
+  phone        String?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  studentProfile StudentProfile?
+  admin          Admin?
+  notifications  Notification[]
+  auditLogs      AuditLog[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model StudentProfile {
+  id                          String          @id @default(uuid())
+  userId                      String          @unique
+  user                        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateOfBirth                 DateTime?
+  gender                      String?
+  category                    String?         // General, OBC, SC, ST, EWS
+  state                       String?
+  district                    String?
+  city                        String?
+  pinCode                     String?
+  bio                         String?
+  careerGoal                  String?
+  preferredLocations          String          @default("[]") // JSON string array
+  preferredDomains            String          @default("[]") // JSON string array
+  remotePreference            String          @default("ANY") // REMOTE, ONSITE, HYBRID, ANY
+  profileCompletionPercentage Int             @default(0)
+  createdAt                   DateTime        @default(now())
+  updatedAt                   DateTime        @updatedAt
+
+  educations                  Education[]
+  studentSkills               StudentSkill[]
+  certifications              Certification[]
+  projects                    Project[]
+  experiences                 Experience[]
+  resumes                     Resume[]
+  applications                Application[]
+  savedInternships            SavedInternship[]
+  recommendations             Recommendation[]
+  feedbacks                   Feedback[]
+
+  @@index([userId])
+}
+
+model Education {
+  id                String         @id @default(uuid())
+  profileId         String
+  profile           StudentProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  level             String         // TENTH, TWELFTH, DIPLOMA, UNDERGRADUATE, POSTGRADUATE
+  degree            String         // e.g. B.Tech, B.Sc, B.Com, MCA
+  branch            String         // e.g. Computer Engineering, Mechanical, Commerce
+  institute         String         // e.g. IIT Bombay, COEP, Delhi University
+  boardOrUniversity String?
+  startYear         Int
+  graduationYear    Int
+  cgpaOrPercentage  Float
+  maxScale          Float          @default(10.0)
+  isCompleted       Boolean        @default(false)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([profileId])
+}
+
+model Skill {
+  id               String           @id @default(uuid())
+  name             String           @unique
+  standardizedName String
+  category         String           @default("TECHNICAL") // TECHNICAL, SOFT, TOOL, DOMAIN
+  createdAt        DateTime         @default(now())
+
+  studentSkills    StudentSkill[]
+  internshipSkills InternshipSkill[]
+
+  @@index([name])
+  @@index([category])
+}
+
+model StudentSkill {
+  id               String           @id @default(uuid())
+  profileId        String
+  profile          StudentProfile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  skillId          String
+  skill            Skill            @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  proficiencyLevel String           @default("INTERMEDIATE") // BEGINNER, INTERMEDIATE, ADVANCED, EXPERT
+  verified         Boolean          @default(false)
+  createdAt        DateTime         @default(now())
+
+  @@unique([profileId, skillId])
+  @@index([profileId])
+  @@index([skillId])
+}
+
+model Certification {
+  id                  String         @id @default(uuid())
+  profileId           String
+  profile             StudentProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  title               String
+  issuingOrganization String
+  issueDate           DateTime?
+  expiryDate          DateTime?
+  credentialId        String?
+  credentialUrl       String?
+  createdAt           DateTime       @default(now())
+
+  @@index([profileId])
+}
+
+model Project {
+  id           String         @id @default(uuid())
+  profileId    String
+  profile      StudentProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  title        String
+  description  String
+  technologies String         // Comma-separated or JSON
+  role         String?
+  projectUrl   String?
+  githubUrl    String?
+  startDate    DateTime?
+  endDate      DateTime?
+  createdAt    DateTime       @default(now())
+
+  @@index([profileId])
+}
+
+model Experience {
+  id             String         @id @default(uuid())
+  profileId      String
+  profile        StudentProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  title          String
+  company        String
+  location       String?
+  experienceType String         @default("INTERNSHIP") // INTERNSHIP, APPRENTICESHIP, PART_TIME, FULL_TIME
+  startDate      DateTime
+  endDate        DateTime?
+  isCurrent      Boolean        @default(false)
+  description    String?
+  createdAt      DateTime       @default(now())
+
+  @@index([profileId])
+}
+
+model Resume {
+  id         String         @id @default(uuid())
+  profileId  String
+  profile    StudentProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  fileName   String
+  fileUrl    String
+  fileType   String         // pdf, docx, txt
+  parsedData String         @default("{}") // JSON string of extracted entities
+  rawText    String?
+  status     String         @default("PENDING") // PENDING, PARSED, CONFIRMED, FAILED
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@index([profileId])
+}
+
+model Organization {
+  id                   String        @id @default(uuid())
+  name                 String        @unique
+  slug                 String        @unique
+  logoUrl              String?
+  website              String?
+  industry             String        // IT, Manufacturing, Banking, Public Sector, Energy, Infrastructure
+  description          String
+  headquarter          String        // New Delhi, Mumbai, Bengaluru, etc.
+  isGovernmentPartner  Boolean       @default(true) // Top 500 partner or PSU for PM Scheme
+  isVerified           Boolean       @default(true)
+  contactEmail         String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  internships          Internship[]
+
+  @@index([slug])
+  @@index([industry])
+}
+
+model Internship {
+  id                   String           @id @default(uuid())
+  organizationId       String
+  organization         Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  title                String
+  slug                 String           @unique
+  description          String
+  responsibilities     String
+  department           String
+  domain               String           // Software, Civil, Mechanical, Finance, Management, Data Science, etc.
+  location             String           // City or All India
+  state                String
+  district             String?
+  workMode             String           @default("ONSITE") // REMOTE, ONSITE, HYBRID
+  durationMonths       Int              @default(12)
+  stipendAmount        Float            @default(5000.0)
+  stipendType          String           @default("MONTHLY") // MONTHLY, FIXED, UNPAID
+  openings             Int              @default(10)
+  deadline             DateTime
+  startDate            DateTime?
+  status               String           @default("PUBLISHED") // DRAFT, PUBLISHED, CLOSED, ARCHIVED
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  skills               InternshipSkill[]
+  eligibilityRule      EligibilityRule?
+  applications         Application[]
+  savedByStudents      SavedInternship[]
+  recommendations      Recommendation[]
+
+  @@index([organizationId])
+  @@index([domain])
+  @@index([workMode])
+  @@index([status])
+  @@index([location])
+}
+
+model InternshipSkill {
+  id           String     @id @default(uuid())
+  internshipId String
+  internship   Internship @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+  skillId      String
+  skill        Skill      @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  isRequired   Boolean    @default(true) // Required vs Preferred
+  weight       Float      @default(1.0)
+
+  @@unique([internshipId, skillId])
+  @@index([internshipId])
+  @@index([skillId])
+}
+
+model EligibilityRule {
+  id                   String         @id @default(uuid())
+  internshipId         String         @unique
+  internship           Internship     @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+  minEducationLevel    String         @default("UNDERGRADUATE")
+  allowedDegrees       String         @default("[]") // JSON string
+  allowedBranches      String         @default("[]") // JSON string
+  minCgpa              Float?         // e.g. 6.0
+  maxGraduationYear    Int?           // e.g. 2026
+  minGraduationYear    Int?           // e.g. 2023
+  minAge               Int?           @default(21)
+  maxAge               Int?           @default(24)
+  allowedStates        String         @default("[]") // JSON string
+  mandatorySkillNames  String         @default("[]") // JSON string of required skill names
+  customRules          String         @default("{}") // Additional rule constraints JSON
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  @@index([internshipId])
+}
+
+model Application {
+  id                      String            @id @default(uuid())
+  studentId               String
+  student                 StudentProfile    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  internshipId            String
+  internship              Internship        @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+  status                  String            @default("APPLIED") // APPLIED, UNDER_REVIEW, SHORTLISTED, REJECTED, ACCEPTED
+  coverLetter             String?
+  resumeId                String?
+  appliedAt               DateTime          @default(now())
+  reviewedAt              DateTime?
+  notes                   String?
+  matchScoreAtApplication Float?
+
+  @@unique([studentId, internshipId])
+  @@index([studentId])
+  @@index([internshipId])
+  @@index([status])
+}
+
+model SavedInternship {
+  id           String         @id @default(uuid())
+  studentId    String
+  student      StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  internshipId String
+  internship   Internship     @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+  savedAt      DateTime       @default(now())
+
+  @@unique([studentId, internshipId])
+  @@index([studentId])
+  @@index([internshipId])
+}
+
+model Recommendation {
+  id                 String               @id @default(uuid())
+  studentId          String
+  student            StudentProfile       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  internshipId       String
+  internship         Internship           @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+  compatibilityScore Float                // 0 to 100
+  eligibilityStatus  String               @default("ELIGIBLE") // ELIGIBLE, NOT_ELIGIBLE, UNKNOWN
+  skillScore         Float                @default(0)
+  educationScore     Float                @default(0)
+  domainScore        Float                @default(0)
+  locationScore      Float                @default(0)
+  experienceScore    Float                @default(0)
+  careerGoalScore    Float                @default(0)
+  preferenceScore    Float                @default(0)
+  matchedSkills      String               @default("[]") // JSON array of skill names
+  missingSkills      String               @default("[]") // JSON array of { skill, isRequired, recommendation }
+  reasons            String               @default("[]") // JSON array of explanation bullet strings
+  engineMode         String               @default("LOCAL_ML") // LOCAL_ML, LLM, HYBRID
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  reasonsDetail      RecommendationReason[]
+  feedbacks          Feedback[]
+
+  @@unique([studentId, internshipId])
+  @@index([studentId])
+  @@index([internshipId])
+  @@index([compatibilityScore])
+  @@index([eligibilityStatus])
+}
+
+model RecommendationReason {
+  id               String         @id @default(uuid())
+  recommendationId String
+  recommendation   Recommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+  factor           String         // SKILL, EDUCATION, DOMAIN, LOCATION, EXPERIENCE, CAREER_GOAL
+  explanation      String
+  impactScore      Float          @default(0)
+
+  @@index([recommendationId])
+}
+
+model Feedback {
+  id               String         @id @default(uuid())
+  recommendationId String
+  recommendation   Recommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+  studentId        String
+  student          StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  rating           Int            @default(5)
+  isRelevant       Boolean        @default(true)
+  comment          String?
+  createdAt        DateTime       @default(now())
+
+  @@index([recommendationId])
+  @@index([studentId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("SYSTEM") // RECOMMENDATION, APPLICATION, DEADLINE, PROFILE, SYSTEM
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+model Admin {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department  String   @default("Ministry of Corporate Affairs")
+  employeeId  String   @unique
+  permissions String   @default("[\"ALL\"]")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String
+  resource   String
+  resourceId String?
+  details    String   @default("{}")
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([createdAt])
+}
+
+model RecommendationConfig {
+  id                   String   @id @default(uuid())
+  key                  String   @unique @default("DEFAULT")
+  skillWeight          Float    @default(30.0)
+  educationWeight      Float    @default(20.0)
+  domainWeight         Float    @default(15.0)
+  locationWeight       Float    @default(10.0)
+  experienceWeight     Float    @default(10.0)
+  careerGoalWeight     Float    @default(10.0)
+  preferenceWeight     Float    @default(5.0)
+  minScoreThreshold    Float    @default(40.0)
+  aiProvider           String   @default("LOCAL_ML")
+  strictEligibility    Boolean  @default(true)
+  isActive             Boolean  @default(true)
+  updatedAt            DateTime @updatedAt
+}
