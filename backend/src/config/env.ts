@@ -15,7 +15,7 @@ if (rawDbUrl.includes('.mongodb.net/?')) {
 export const config = {
   port: parseInt(process.env.PORT || '5000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
-  clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
+  clientUrl: (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/+$/, ''),
   databaseUrl: rawDbUrl,
   jwtSecret: process.env.JWT_SECRET || 'pm_internship_scheme_jwt_secret_super_secure_key_2026!',
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'pm_internship_scheme_jwt_refresh_secret_key_2026!',
