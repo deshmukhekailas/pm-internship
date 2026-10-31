@@ -25,4 +25,10 @@ export const config = {
   geminiApiKey: process.env.GEMINI_API_KEY || '',
   uploadDir: path.resolve(__dirname, '../../uploads'),
   maxFileSizeMb: parseInt(process.env.MAX_FILE_SIZE_MB || '5', 10),
+  smtpHost: process.env.SMTP_HOST || '',
+  smtpPort: parseInt(process.env.SMTP_PORT || '587', 10),
+  smtpUser: process.env.SMTP_USER || '',
+  smtpPass: process.env.SMTP_PASS || '',
+  smtpFrom: process.env.SMTP_FROM || '"PM Internship Scheme" <noreply@pminternship.gov.in>',
+  googleClientId: process.env.GOOGLE_CLIENT_ID || '',
 };

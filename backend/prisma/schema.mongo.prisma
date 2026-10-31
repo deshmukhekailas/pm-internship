@@ -10,16 +10,20 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(auto()) @map("_id") @db.ObjectId
-  email        String        @unique
-  passwordHash String
-  role         String        @default("STUDENT") // STUDENT, ADMIN
-  firstName    String
-  lastName     String
-  phone        String?
-  isActive     Boolean       @default(true)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  email           String          @unique
+  passwordHash    String?
+  googleId        String?
+  avatarUrl       String?
+  isEmailVerified Boolean         @default(false)
+  authProvider    String          @default("LOCAL") // LOCAL, GOOGLE, OTP
+  role            String          @default("STUDENT") // STUDENT, ADMIN
+  firstName       String
+  lastName        String
+  phone           String?
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
   studentProfile StudentProfile?
   admin          Admin?
@@ -414,4 +418,16 @@ model RecommendationConfig {
   strictEligibility    Boolean  @default(true)
   isActive             Boolean  @default(true)
   updatedAt            DateTime @updatedAt
+}
+
+model OtpVerification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String
+  otp       String
+  type      String   // SIGNUP, LOGIN
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
 }

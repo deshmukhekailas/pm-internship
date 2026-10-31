@@ -1,8 +1,10 @@
 import React from 'react';
 import { ShieldCheck, Award, Building2, BookOpen, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 export const AboutPage: React.FC = () => {
+  const { user, isAuthenticated } = useAuth();
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
       {/* Header */}
@@ -95,12 +97,21 @@ export const AboutPage: React.FC = () => {
           India's leading organizations.
         </p>
         <div className="pt-2">
-          <Link
-            to="/register"
-            className="px-6 py-2.5 rounded-xl bg-gov-saffron hover:bg-gov-saffronLight text-white font-bold text-xs sm:text-sm inline-block shadow-md transition-all"
-          >
-            Register Free on Portal
-          </Link>
+          {!isAuthenticated ? (
+            <Link
+              to="/register"
+              className="px-6 py-2.5 rounded-xl bg-gov-saffron hover:bg-gov-saffronLight text-white font-bold text-xs sm:text-sm inline-block shadow-md transition-all"
+            >
+              Register Free on Portal
+            </Link>
+          ) : (
+            <Link
+              to={user?.role === 'ADMIN' ? '/admin/dashboard' : '/student/dashboard'}
+              className="px-6 py-2.5 rounded-xl bg-gov-saffron hover:bg-gov-saffronLight text-white font-bold text-xs sm:text-sm inline-block shadow-md transition-all"
+            >
+              Go to {user?.role === 'ADMIN' ? 'Admin Portal' : 'My Dashboard'}
+            </Link>
+          )}
         </div>
       </div>
     </div>

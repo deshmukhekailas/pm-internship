@@ -14,10 +14,12 @@ import {
 } from 'lucide-react';
 import { InternshipCard } from '../../components/internships/InternshipCard';
 import { CardSkeleton } from '../../components/common/LoadingSkeleton';
+import { useAuth } from '../../context/AuthContext';
 import api from '../../api/client';
 import { Internship } from '../../types';
 
 export const HomePage: React.FC = () => {
+  const { user, isAuthenticated } = useAuth();
   const [keyword, setKeyword] = useState('');
   const [domain, setDomain] = useState('ALL');
   const [featuredInternships, setFeaturedInternships] = useState<Internship[]>([]);
@@ -108,12 +110,22 @@ export const HomePage: React.FC = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-            <Link
-              to="/register"
-              className="px-6 py-2.5 rounded-xl bg-white text-gov-navy font-bold text-xs sm:text-sm hover:bg-slate-100 transition-all shadow-md"
-            >
-              Get Started Free
-            </Link>
+            {!isAuthenticated ? (
+              <Link
+                to="/register"
+                className="px-6 py-2.5 rounded-xl bg-white text-gov-navy font-bold text-xs sm:text-sm hover:bg-slate-100 transition-all shadow-md"
+              >
+                Get Started Free
+              </Link>
+            ) : (
+              <Link
+                to={user?.role === 'ADMIN' ? '/admin/dashboard' : '/student/dashboard'}
+                className="px-6 py-2.5 rounded-xl bg-white text-gov-navy font-bold text-xs sm:text-sm hover:bg-slate-100 transition-all shadow-md flex items-center gap-1.5"
+              >
+                <span>Go to {user?.role === 'ADMIN' ? 'Admin Portal' : 'My Dashboard'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            )}
             <Link
               to="/how-it-works"
               className="px-6 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium text-xs sm:text-sm border border-white/20 transition-all"
@@ -272,12 +284,21 @@ export const HomePage: React.FC = () => {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-            <Link
-              to="/register"
-              className="px-6 py-3 rounded-xl bg-gov-saffron hover:bg-gov-saffronLight text-white font-bold text-xs sm:text-sm text-center shadow-lg transition-all"
-            >
-              Register Candidate Account
-            </Link>
+            {!isAuthenticated ? (
+              <Link
+                to="/register"
+                className="px-6 py-3 rounded-xl bg-gov-saffron hover:bg-gov-saffronLight text-white font-bold text-xs sm:text-sm text-center shadow-lg transition-all"
+              >
+                Register Candidate Account
+              </Link>
+            ) : (
+              <Link
+                to={user?.role === 'ADMIN' ? '/admin/dashboard' : '/student/dashboard'}
+                className="px-6 py-3 rounded-xl bg-gov-saffron hover:bg-gov-saffronLight text-white font-bold text-xs sm:text-sm text-center shadow-lg transition-all"
+              >
+                Go to {user?.role === 'ADMIN' ? 'Admin Portal' : 'My Dashboard'}
+              </Link>
+            )}
             <Link
               to="/how-it-works"
               className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs sm:text-sm text-center border border-white/20 transition-all"

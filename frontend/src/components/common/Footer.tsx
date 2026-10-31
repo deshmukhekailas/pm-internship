@@ -1,14 +1,13 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { ShieldCheck, Phone, Mail, ExternalLink, Heart } from 'lucide-react';
+import { ShieldCheck, Phone, Mail } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
     <footer className="bg-slate-900 text-slate-300 pt-12 pb-8 border-t-4 border-gov-saffron">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
           {/* Col 1: Portal Overview */}
-          <div className="space-y-4">
+          <div className="space-y-4 max-w-lg">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-gov-saffron"></span>
               <h3 className="text-white font-bold text-sm tracking-wide">PM INTERNSHIP SCHEME</h3>
@@ -23,82 +22,9 @@ export const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Col 2: Quick Links */}
-          <div>
-            <h4 className="text-white font-semibold text-xs tracking-wider uppercase mb-4">
-              Quick Navigation
-            </h4>
-            <ul className="space-y-2 text-xs">
-              <li>
-                <Link to="/internships" className="hover:text-white transition-colors">
-                  Explore Opportunities
-                </Link>
-              </li>
-              <li>
-                <Link to="/how-it-works" className="hover:text-white transition-colors">
-                  Recommendation Algorithm
-                </Link>
-              </li>
-              <li>
-                <Link to="/about" className="hover:text-white transition-colors">
-                  Scheme Guidelines & Stipend
-                </Link>
-              </li>
-              <li>
-                <Link to="/login" className="hover:text-white transition-colors">
-                  Candidate Login Portal
-                </Link>
-              </li>
-              <li>
-                <Link to="/register" className="hover:text-white transition-colors">
-                  New Candidate Registration
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Col 3: Guidelines & Legal */}
-          <div>
-            <h4 className="text-white font-semibold text-xs tracking-wider uppercase mb-4">
-              Transparency & Policies
-            </h4>
-            <ul className="space-y-2 text-xs">
-              <li>
-                <Link to="/privacy" className="hover:text-white transition-colors">
-                  Fairness & Responsible AI Policy
-                </Link>
-              </li>
-              <li>
-                <Link to="/terms" className="hover:text-white transition-colors">
-                  Terms of Service & Code of Conduct
-                </Link>
-              </li>
-              <li>
-                <a
-                  href="https://pminternship.mca.gov.in"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:text-white transition-colors flex items-center gap-1"
-                >
-                  Official MCA Portal <ExternalLink className="w-3 h-3 text-slate-400" />
-                </a>
-              </li>
-              <li>
-                <a
-                  href="http://localhost:5000/api/docs"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:text-white transition-colors flex items-center gap-1"
-                >
-                  OpenAPI / Swagger Docs <ExternalLink className="w-3 h-3 text-slate-400" />
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Col 4: Grievance & Helpdesk */}
-          <div>
-            <h4 className="text-white font-semibold text-xs tracking-wider uppercase mb-4">
+          {/* Col 2: Grievance & Helpdesk */}
+          <div className="space-y-4">
+            <h4 className="text-white font-semibold text-xs tracking-wider uppercase mb-2">
               Candidate Helpdesk
             </h4>
             <div className="space-y-3 text-xs text-slate-400">

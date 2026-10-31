@@ -7,7 +7,12 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<User>;
+  loginWithOtp: (email: string, otp: string) => Promise<User>;
+  sendOtp: (email: string, type: 'SIGNUP' | 'LOGIN') => Promise<{ message: string; devOtp?: string }>;
+  verifyOtp: (email: string, otp: string, type: 'SIGNUP' | 'LOGIN') => Promise<{ verified: boolean }>;
   register: (data: any) => Promise<User>;
+  registerWithOtp: (data: any) => Promise<User>;
+  loginWithGoogle: (credential: string) => Promise<User>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -52,8 +57,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return userData;
   };
 
+  const sendOtp = async (email: string, type: 'SIGNUP' | 'LOGIN') => {
+    const res = await api.post('/auth/send-otp', { email, type });
+    return res.data.data;
+  };
+
+  const verifyOtp = async (email: string, otp: string, type: 'SIGNUP' | 'LOGIN') => {
+    const res = await api.post('/auth/verify-otp', { email, otp, type });
+    return res.data.data;
+  };
+
+  const loginWithOtp = async (email: string, otp: string): Promise<User> => {
+    const res = await api.post('/auth/login-otp', { email, otp });
+    const { user: userData, accessToken, refreshToken } = res.data.data;
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+    return userData;
+  };
+
   const register = async (data: any): Promise<User> => {
     const res = await api.post('/auth/register', data);
+    const { user: userData, accessToken, refreshToken } = res.data.data;
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+    return userData;
+  };
+
+  const registerWithOtp = async (data: any): Promise<User> => {
+    const res = await api.post('/auth/register-otp', data);
+    const { user: userData, accessToken, refreshToken } = res.data.data;
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+    return userData;
+  };
+
+  const loginWithGoogle = async (credential: string): Promise<User> => {
+    const res = await api.post('/auth/google', { credential });
     const { user: userData, accessToken, refreshToken } = res.data.data;
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', refreshToken);
@@ -82,7 +127,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated: !!user,
         isLoading,
         login,
+        loginWithOtp,
+        sendOtp,
+        verifyOtp,
         register,
+        registerWithOtp,
+        loginWithGoogle,
         logout,
         refreshUser,
       }}

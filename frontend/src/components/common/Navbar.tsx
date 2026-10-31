@@ -39,50 +39,49 @@ export const Navbar: React.FC = () => {
       {/* Main Navbar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
-          {/* Logo & Portal Title */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gov-navy to-gov-navyLight flex items-center justify-center text-white shadow-md shadow-gov-navy/20">
-              <Briefcase className="w-5 h-5 text-gov-saffron" />
-            </div>
-            <div>
-              <div className="text-base font-bold text-gov-navy leading-tight tracking-tight flex items-center gap-1.5">
-                <span>PM INTERNSHIP SCHEME</span>
-                <span className="bg-amber-100 text-amber-800 text-[10px] font-semibold px-1.5 py-0.5 rounded border border-amber-300">
-                  AI RECOMMENDATION
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 font-medium">National Youth Career Matching Portal</p>
-            </div>
-          </Link>
+          {/* Logo & Portal Title (Unlinked) */}
+          <div className="flex items-center gap-3 select-none">
+            <img
+              src=""
+              alt="PM Internship Scheme Logo"
+              className="h-11 w-auto object-contain"
+              onError={(e) => {
+                e.currentTarget.src = '/pm_internship_logo_eng.svg';
+              }}
+            />
+            
+          </div>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6">
-            <Link
-              to="/internships"
-              className="text-sm font-medium text-slate-700 hover:text-gov-navy transition-colors"
-            >
-              Explore Internships
-            </Link>
-            <Link
-              to="/how-it-works"
-              className="text-sm font-medium text-slate-700 hover:text-gov-navy transition-colors flex items-center gap-1"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-gov-saffron" />
-              How AI Works
-            </Link>
-            <Link
-              to="/about"
-              className="text-sm font-medium text-slate-700 hover:text-gov-navy transition-colors"
-            >
-              About Scheme
-            </Link>
-            <Link
-              to="/contact"
-              className="text-sm font-medium text-slate-700 hover:text-gov-navy transition-colors"
-            >
-              Help & FAQ
-            </Link>
-          </nav>
+          {/* Desktop Navigation Links (For Candidates & Public Visitors) */}
+          {user?.role !== 'ADMIN' && (
+            <nav className="hidden md:flex items-center gap-6">
+              <Link
+                to="/internships"
+                className="text-sm font-medium text-slate-700 hover:text-gov-navy transition-colors"
+              >
+                Explore Internships
+              </Link>
+              <Link
+                to="/how-it-works"
+                className="text-sm font-medium text-slate-700 hover:text-gov-navy transition-colors flex items-center gap-1"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-gov-saffron" />
+                How AI Works
+              </Link>
+              <Link
+                to="/about"
+                className="text-sm font-medium text-slate-700 hover:text-gov-navy transition-colors"
+              >
+                About Scheme
+              </Link>
+              <Link
+                to="/contact"
+                className="text-sm font-medium text-slate-700 hover:text-gov-navy transition-colors"
+              >
+                Help & FAQ
+              </Link>
+            </nav>
+          )}
 
           {/* Right Action Buttons */}
           <div className="hidden md:flex items-center gap-3">
@@ -220,34 +219,38 @@ export const Navbar: React.FC = () => {
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-white border-b border-slate-200 px-4 pt-2 pb-6 space-y-3">
-          <Link
-            to="/internships"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block py-2 text-base font-medium text-slate-700 hover:text-gov-navy"
-          >
-            Explore Internships
-          </Link>
-          <Link
-            to="/how-it-works"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block py-2 text-base font-medium text-slate-700 hover:text-gov-navy"
-          >
-            How AI Recommendation Works
-          </Link>
-          <Link
-            to="/about"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block py-2 text-base font-medium text-slate-700 hover:text-gov-navy"
-          >
-            About PM Internship Scheme
-          </Link>
-          <Link
-            to="/contact"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block py-2 text-base font-medium text-slate-700 hover:text-gov-navy"
-          >
-            Contact & Grievances
-          </Link>
+          {user?.role !== 'ADMIN' && (
+            <>
+              <Link
+                to="/internships"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block py-2 text-base font-medium text-slate-700 hover:text-gov-navy"
+              >
+                Explore Internships
+              </Link>
+              <Link
+                to="/how-it-works"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block py-2 text-base font-medium text-slate-700 hover:text-gov-navy"
+              >
+                How AI Recommendation Works
+              </Link>
+              <Link
+                to="/about"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block py-2 text-base font-medium text-slate-700 hover:text-gov-navy"
+              >
+                About PM Internship Scheme
+              </Link>
+              <Link
+                to="/contact"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block py-2 text-base font-medium text-slate-700 hover:text-gov-navy"
+              >
+                Contact & Grievances
+              </Link>
+            </>
+          )}
 
           <div className="border-t border-slate-100 pt-4">
             {isAuthenticated && user ? (
