@@ -52,7 +52,7 @@ export class FeatureExtractor {
   public static extractStudentFeatures(profile: any): StudentFeatureProfile {
     const user = profile.user || {};
     const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Candidate';
-    const age = this.calculateAge(profile.dateOfBirth);
+    const age = FeatureExtractor.calculateAge(profile.dateOfBirth);
 
     // Pick highest education level
     let highestEducation: StudentFeatureProfile['highestEducation'] = undefined;
@@ -70,15 +70,30 @@ export class FeatureExtractor {
         graduationYear: top.graduationYear,
         cgpaOrPercentage: top.cgpaOrPercentage,
         maxScale: top.maxScale || 10,
-        cgpaNormalized: this.normalizeCgpa(top.cgpaOrPercentage, top.maxScale),
+        cgpaNormalized: FeatureExtractor.normalizeCgpa(top.cgpaOrPercentage, top.maxScale),
       };
     }
 
-    const skills = (profile.studentSkills || []).map((ss: any) => ({
-      name: ss.skill?.name || ss.skillName || 'Skill',
-      category: ss.skill?.category || 'TECHNICAL',
-      proficiencyLevel: ss.proficiencyLevel || 'INTERMEDIATE',
-    }));
+    const skills: { name: string; category: string; proficiencyLevel: string }[] = [];
+    for (const ss of profile.studentSkills || []) {
+      const rawName = ss.skill?.name || ss.skillName || '';
+      if (rawName.includes(',')) {
+        const parts = rawName.split(',').map((p: string) => p.trim()).filter(Boolean);
+        for (const p of parts) {
+          skills.push({
+            name: p,
+            category: ss.skill?.category || 'TECHNICAL',
+            proficiencyLevel: ss.proficiencyLevel || 'INTERMEDIATE',
+          });
+        }
+      } else if (rawName.trim()) {
+        skills.push({
+          name: rawName.trim(),
+          category: ss.skill?.category || 'TECHNICAL',
+          proficiencyLevel: ss.proficiencyLevel || 'INTERMEDIATE',
+        });
+      }
+    }
 
     const projects = (profile.projects || []).map((p: any) => ({
       title: p.title || '',
@@ -99,8 +114,8 @@ export class FeatureExtractor {
       age,
       state: profile.state || undefined,
       city: profile.city || undefined,
-      preferredLocations: this.parseJsonArray(profile.preferredLocations),
-      preferredDomains: this.parseJsonArray(profile.preferredDomains),
+      preferredLocations: FeatureExtractor.parseJsonArray(profile.preferredLocations),
+      preferredDomains: FeatureExtractor.parseJsonArray(profile.preferredDomains),
       remotePreference: profile.remotePreference || 'ANY',
       careerGoal: profile.careerGoal || undefined,
       bio: profile.bio || undefined,
@@ -134,15 +149,15 @@ export class FeatureExtractor {
       const rule = internship.eligibilityRule;
       eligibility = {
         minEducationLevel: rule.minEducationLevel,
-        allowedDegrees: this.parseJsonArray(rule.allowedDegrees),
-        allowedBranches: this.parseJsonArray(rule.allowedBranches),
+        allowedDegrees: FeatureExtractor.parseJsonArray(rule.allowedDegrees),
+        allowedBranches: FeatureExtractor.parseJsonArray(rule.allowedBranches),
         minCgpa: rule.minCgpa !== null ? rule.minCgpa : undefined,
         minGraduationYear: rule.minGraduationYear || undefined,
         maxGraduationYear: rule.maxGraduationYear || undefined,
         minAge: rule.minAge || undefined,
         maxAge: rule.maxAge || undefined,
-        allowedStates: this.parseJsonArray(rule.allowedStates),
-        mandatorySkillNames: this.parseJsonArray(rule.mandatorySkillNames),
+        allowedStates: FeatureExtractor.parseJsonArray(rule.allowedStates),
+        mandatorySkillNames: FeatureExtractor.parseJsonArray(rule.mandatorySkillNames),
       };
     }
 

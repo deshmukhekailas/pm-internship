@@ -6,10 +6,11 @@ import { sendSuccess, sendError } from '../utils/apiResponse';
 export class RecommendationController {
   public static async getRecommendations(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { minScore, domain } = req.query;
+      const { minScore, domain, limit } = req.query;
       const recs = await RecommendationAppService.getStudentRecommendations(req.user!.userId, {
         minScore: minScore ? Number(minScore) : undefined,
         domain: domain as string,
+        limit: limit ? Number(limit) : undefined,
       });
       sendSuccess(res, recs, 'Personalized recommendations retrieved.');
     } catch (err: any) {

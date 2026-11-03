@@ -70,13 +70,16 @@ export class RecommendationAppService {
     });
 
     const studentFeature = FeatureExtractor.extractStudentFeatures(studentProfile);
-    const internshipFeatures = publishedInternships.map(FeatureExtractor.extractInternshipFeatures);
+    const internshipFeatures = publishedInternships.map((i) => FeatureExtractor.extractInternshipFeatures(i));
 
     // Run batch recommendation
     const results = await service.batchRecommend(studentFeature, internshipFeatures, weights);
 
-    // Filter by min threshold (or include all if student has few)
-    const validResults = results.filter((r) => r.compatibilityScore >= minThreshold || r.eligibility.isEligible);
+    // Filter by min threshold (or include top results if few or none meet threshold)
+    let validResults = results.filter((r) => r.compatibilityScore >= minThreshold || r.eligibility.isEligible);
+    if (validResults.length === 0 && results.length > 0) {
+      validResults = results.slice(0, 30);
+    }
 
     // Upsert recommendations in DB
     for (const res of validResults) {
@@ -158,13 +161,17 @@ export class RecommendationAppService {
       });
     }
 
-    return this.getStudentRecommendations(userId);
+    return this.getStudentRecommendations(userId, undefined, true);
   }
 
   /**
    * Get student's recommendations
    */
-  public static async getStudentRecommendations(userId: string, filters?: { minScore?: number; domain?: string }): Promise<any[]> {
+  public static async getStudentRecommendations(
+    userId: string,
+    filters?: { minScore?: number; domain?: string; limit?: number },
+    isRetry: boolean = false
+  ): Promise<any[]> {
     const studentProfile = await prisma.studentProfile.findUnique({
       where: { userId },
       include: {
@@ -182,8 +189,9 @@ export class RecommendationAppService {
       where: { studentId: studentProfile.id },
     });
 
-    if (existingCount === 0) {
-      return this.generateForStudent(userId);
+    if (existingCount === 0 && !isRetry) {
+      await this.generateForStudent(userId);
+      return this.getStudentRecommendations(userId, filters, true);
     }
 
     const where: any = {
@@ -216,7 +224,7 @@ export class RecommendationAppService {
         feedbacks: true,
       },
       orderBy: { compatibilityScore: 'desc' },
-      take: 50,
+      take: filters?.limit ? Number(filters.limit) : 50,
     });
 
     const savedSet = new Set(studentProfile.savedInternships.map((s) => s.internshipId));
@@ -263,11 +271,19 @@ export class RecommendationAppService {
 
     if (!studentProfile) throw new Error('Student profile not found.');
 
-    const topRecs = await prisma.recommendation.findMany({
+    let topRecs = await prisma.recommendation.findMany({
       where: { studentId: studentProfile.id, eligibilityStatus: 'ELIGIBLE' },
       orderBy: { compatibilityScore: 'desc' },
       take: 10,
     });
+
+    if (topRecs.length === 0) {
+      topRecs = await prisma.recommendation.findMany({
+        where: { studentId: studentProfile.id },
+        orderBy: { compatibilityScore: 'desc' },
+        take: 10,
+      });
+    }
 
     const skillDemandMap = new Map<string, number>();
     for (const rec of topRecs) {

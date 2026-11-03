@@ -43,9 +43,18 @@ export class EligibilityEngine {
       const allowedLower = rule.allowedDegrees.map((d) => d.toLowerCase().trim());
       const studentDegreeLower = edu.degree.toLowerCase().trim();
 
-      const degreeMatch = allowedLower.some((allowed) =>
-        studentDegreeLower.includes(allowed) || allowed.includes(studentDegreeLower)
-      );
+      const degreeMatch = allowedLower.some((allowed) => {
+        if (allowed === 'all' || allowed === 'any' || allowed === '') return true;
+        if (studentDegreeLower.includes(allowed) || allowed.includes(studentDegreeLower)) return true;
+        // B.Tech / B.E. equivalence
+        if (
+          (allowed.includes('b.tech') || allowed.includes('btech') || allowed.includes('b.e') || allowed.includes('be')) &&
+          (studentDegreeLower.includes('b.tech') || studentDegreeLower.includes('btech') || studentDegreeLower.includes('b.e') || studentDegreeLower.includes('be'))
+        ) {
+          return true;
+        }
+        return false;
+      });
 
       if (degreeMatch) {
         passedChecks.push(`Degree matches requirement (${edu.degree})`);
@@ -63,13 +72,33 @@ export class EligibilityEngine {
       const allowedBranchesLower = rule.allowedBranches.map((b) => b.toLowerCase().trim());
       const studentBranchLower = edu.branch.toLowerCase().trim();
 
-      const branchMatch = allowedBranchesLower.some(
-        (allowed) =>
-          studentBranchLower.includes(allowed) ||
-          allowed.includes(studentBranchLower) ||
-          allowed === 'all' ||
-          allowed === 'any'
-      );
+      const branchMatch = allowedBranchesLower.some((allowed) => {
+        if (allowed === 'all' || allowed === 'any' || allowed === '') return true;
+        if (studentBranchLower.includes(allowed) || allowed.includes(studentBranchLower)) return true;
+
+        // Semantic synonym groups for Indian academic disciplines
+        const isCompAllowed = allowed.includes('computer') || allowed.includes('cse') || allowed.includes('software') || allowed.includes('information technology') || allowed === 'it' || allowed.includes('data science') || allowed.includes('artificial intelligence') || allowed.includes('ai');
+        const isCompStudent = studentBranchLower.includes('computer') || studentBranchLower.includes('cse') || studentBranchLower.includes('software') || studentBranchLower.includes('information technology') || studentBranchLower === 'it' || studentBranchLower.includes('data science') || studentBranchLower.includes('artificial intelligence') || studentBranchLower.includes('ai');
+        if (isCompAllowed && isCompStudent) return true;
+
+        const isMechAllowed = allowed.includes('mechanical') || allowed.includes('automobile') || allowed.includes('production') || allowed.includes('manufacturing');
+        const isMechStudent = studentBranchLower.includes('mechanical') || studentBranchLower.includes('automobile') || studentBranchLower.includes('production') || studentBranchLower.includes('manufacturing');
+        if (isMechAllowed && isMechStudent) return true;
+
+        const isElecAllowed = allowed.includes('electrical') || allowed.includes('electronic') || allowed.includes('telecom') || allowed.includes('instrumentation') || allowed === 'ece' || allowed === 'eee';
+        const isElecStudent = studentBranchLower.includes('electrical') || studentBranchLower.includes('electronic') || studentBranchLower.includes('telecom') || studentBranchLower.includes('instrumentation') || studentBranchLower === 'ece' || studentBranchLower === 'eee';
+        if (isElecAllowed && isElecStudent) return true;
+
+        const isCivilAllowed = allowed.includes('civil') || allowed.includes('construction') || allowed.includes('structural') || allowed.includes('infrastructure');
+        const isCivilStudent = studentBranchLower.includes('civil') || studentBranchLower.includes('construction') || studentBranchLower.includes('structural') || studentBranchLower.includes('infrastructure');
+        if (isCivilAllowed && isCivilStudent) return true;
+
+        const isBusinessAllowed = allowed.includes('business') || allowed.includes('management') || allowed.includes('commerce') || allowed.includes('finance') || allowed.includes('marketing') || allowed.includes('economics');
+        const isBusinessStudent = studentBranchLower.includes('business') || studentBranchLower.includes('management') || studentBranchLower.includes('commerce') || studentBranchLower.includes('finance') || studentBranchLower.includes('marketing') || studentBranchLower.includes('economics');
+        if (isBusinessAllowed && isBusinessStudent) return true;
+
+        return false;
+      });
 
       if (branchMatch) {
         passedChecks.push(`Branch/Field matches requirement (${edu.branch})`);
@@ -101,9 +130,9 @@ export class EligibilityEngine {
       failedChecks.push(
         `Graduation year (${edu.graduationYear}) is earlier than required (${rule.minGraduationYear})`
       );
-    } else if (rule.maxGraduationYear && edu.graduationYear > rule.maxGraduationYear) {
+    } else if (rule.maxGraduationYear && edu.graduationYear > (rule.maxGraduationYear + 2)) {
       failedChecks.push(
-        `Graduation year (${edu.graduationYear}) is later than required (${rule.maxGraduationYear})`
+        `Graduation year (${edu.graduationYear}) is later than eligible window`
       );
     } else if (rule.minGraduationYear || rule.maxGraduationYear) {
       passedChecks.push(`Graduation year (${edu.graduationYear}) meets eligibility window`);
@@ -129,7 +158,15 @@ export class EligibilityEngine {
       const missingMandatory: string[] = [];
       for (const reqSkill of rule.mandatorySkillNames) {
         const reqLower = reqSkill.toLowerCase().trim();
-        const hasSkill = Array.from(candidateSkillSet).some((cs) => cs.includes(reqLower) || reqLower.includes(cs));
+        const hasSkill = Array.from(candidateSkillSet).some((cs) => {
+          if (cs === reqLower) return true;
+          if (cs.includes(reqLower) || reqLower.includes(cs)) return true;
+          // Aliases
+          if ((reqLower === 'js' || reqLower === 'javascript') && (cs === 'js' || cs === 'javascript')) return true;
+          if ((reqLower.includes('c++') || reqLower.includes('cpp')) && (cs.includes('c++') || cs.includes('cpp'))) return true;
+          if (reqLower.includes('react') && cs.includes('react')) return true;
+          return false;
+        });
         if (!hasSkill) {
           missingMandatory.push(reqSkill);
         }
@@ -147,11 +184,27 @@ export class EligibilityEngine {
       const allowedStatesLower = rule.allowedStates.map((s) => s.toLowerCase().trim());
       const studentStateLower = (student.state || '').toLowerCase().trim();
 
-      const isAllStates = allowedStatesLower.includes('all') || allowedStatesLower.includes('pan-india') || allowedStatesLower.length === 0;
+      const isAllStates =
+        allowedStatesLower.length === 0 ||
+        allowedStatesLower.some(
+          (s) =>
+            s.includes('all') ||
+            s.includes('pan-india') ||
+            s.includes('india') ||
+            s === 'any' ||
+            s === ''
+        );
 
-      if (!isAllStates && studentStateLower) {
-        if (allowedStatesLower.includes(studentStateLower)) {
-          passedChecks.push(`Resident state (${student.state}) is eligible`);
+      if (isAllStates) {
+        passedChecks.push('Open to candidates from all states and union territories');
+      } else if (studentStateLower) {
+        const matchesState = allowedStatesLower.some(
+          (allowed) =>
+            allowed.includes(studentStateLower) ||
+            studentStateLower.includes(allowed)
+        );
+        if (matchesState) {
+          passedChecks.push(`Resident state (${(student.state || '').trim()}) is eligible`);
         } else {
           failedChecks.push(
             `Internship is restricted to candidates from: ${rule.allowedStates.join(', ')}`
