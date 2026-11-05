@@ -12,3 +12,6 @@ uploads/*
 .DS_Store
 .turbo
 .cache
+reports/
+reports
+
